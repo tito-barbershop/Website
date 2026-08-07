@@ -1,6 +1,6 @@
 {
-  "name": "barbershop",
-  "description": "Grow your barbershop business with BarberHub - appointment booking, staff management, customer analytics, and revenue tracking",
+  "name": "TitoBarbershop",
+  "description": "Tito Barbershop - Appointment Booking, Staff Management, Customer Analytics, and Revenue/Expense Tracking",
   "version": "1.0.0",
   "type": "module",
   "private": true,

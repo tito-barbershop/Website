@@ -23,7 +23,7 @@ export async function sendEmail(data: EmailData): Promise<void> {
       to: data.to,
       subject: data.subject,
       htmlContent: data.htmlContent,
-      sender: data.from || { email: 'omarfathyyzz8@gmail.com', name: 'BarberHub' }
+      sender: data.from || { email: 'omarfathyyzz8@gmail.com', name: 'Tito Barbershop' }
     };
 
     const response = await fetch(BREVO_API_URL, {
@@ -80,10 +80,10 @@ export function generateAppointmentConfirmationEmail(
               <p><strong>Time:</strong> ${time}</p>
             </div>
             <p>Please arrive 5-10 minutes early. If you need to reschedule or cancel, please contact us as soon as possible.</p>
-            <p>Thank you for choosing BarberHub!</p>
+            <p>Thank you for choosing Tito Barbershop!</p>
           </div>
           <div class="footer">
-            <p>&copy; 2026 BarberHub. All rights reserved.</p>
+            <p>&copy; 2026 Tito Barbershop. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -134,7 +134,7 @@ export function generateWorkerNotificationEmail(
             <a href="https://barberhub.com/worker/dashboard" class="action-btn">Review Appointment</a>
           </div>
           <div class="footer">
-            <p>&copy; 2026 BarberHub. All rights reserved.</p>
+            <p>&copy; 2026 Tito Barbershop. All rights reserved.</p>
           </div>
         </div>
       </body>

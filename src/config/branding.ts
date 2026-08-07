@@ -1,5 +1,5 @@
 export const branding = {
-  shopName: 'BarberHub',
+  shopName: 'Tito Barbershop',
   tagline: 'Premium Barbering Services',
   colors: {
     primary: '#1f2937',
@@ -9,6 +9,6 @@ export const branding = {
     warning: '#f59e0b',
     error: '#ef4444',
   },
-  logo: '✂️',
+  logo: '/src/assets/logo.jpeg',
   dateFormat: 'dd/MM/yyyy hh:mm a',
 };
