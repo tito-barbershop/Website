@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import type { UserRole } from '../types';
 import { registerUser } from '../lib/auth';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -15,7 +14,6 @@ const schema = z.object({
   email: z.string().email('Invalid email'),
   phone: z.string().min(10, 'Invalid phone number'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  role: z.enum(['customer', 'owner'] as const),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -31,27 +29,17 @@ export function RegisterPage() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      role: 'customer',
-    },
   });
 
   const onSubmit = async (data: FormData) => {
     try {
       setIsLoading(true);
-      await registerUser(data.email, data.password, data.name, data.phone, data.role as UserRole);
+      await registerUser(data.email, data.password, data.name, data.phone, 'customer');
       showToast('Registration successful!', 'success');
 
-      // For customers, redirect to customer home (which will load the shop from localStorage)
-      // This preserves the currentShopOwnerId that should have been set before registration
-      if (data.role === 'customer') {
-        // Check if we have a shop owner ID; if not, go back to determine it
-        const ownerId = localStorage.getItem('currentShopOwnerId');
-        if (ownerId) {
-          navigate('/customer/home');
-        } else {
-          navigate('/');
-        }
+      const ownerId = localStorage.getItem('currentShopOwnerId');
+      if (ownerId) {
+        navigate('/customer/home');
       } else {
         navigate('/');
       }
@@ -101,18 +89,6 @@ export function RegisterPage() {
             error={errors.password?.message}
             {...register('password')}
           />
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              {...register('role')}
-            >
-              <option value="customer">Customer</option>
-              <option value="owner">Shop Owner</option>
-            </select>
-            {errors.role && <p className="text-red-600 text-sm mt-1">{errors.role.message}</p>}
-          </div>
 
           <Button type="submit" isLoading={isLoading} className="w-full">
             Create Account
