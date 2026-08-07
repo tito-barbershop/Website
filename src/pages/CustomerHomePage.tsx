@@ -99,7 +99,7 @@ export function CustomerHomePage() {
       <nav className="bg-white shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/customer/home')}>
-            <span className="text-2xl">{branding.logo}</span>
+            <img src={branding.logo} alt="logo" className="w-15 h-8" />
             <h1 className="text-xl font-bold text-gray-900">{branding.shopName}</h1>
           </div>
           <div className="hidden md:flex items-center gap-4">

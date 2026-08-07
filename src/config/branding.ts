@@ -9,6 +9,6 @@ export const branding = {
     warning: '#f59e0b',
     error: '#ef4444',
   },
-  logo: '/src/assets/logo.jpeg',
+  logo: '/src/assets/logo.png',
   dateFormat: 'dd/MM/yyyy hh:mm a',
 };

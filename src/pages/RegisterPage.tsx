@@ -66,7 +66,7 @@ export function RegisterPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="text-4xl mb-2">{branding.logo}</div>
+          <img src={branding.logo} alt="logo" className="w-30 h-16 mx-auto mb-2" />
           <h1 className="text-2xl font-bold text-gray-900">{branding.shopName}</h1>
           <p className="text-gray-600 text-sm mt-1">Create your account</p>
         </div>

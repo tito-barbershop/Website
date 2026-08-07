@@ -40,7 +40,7 @@ export function HomePage() {
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{branding.logo}</span>
+            <img src={branding.logo} alt="logo" className="w-15 h-8" />
             <h1 className="text-xl font-bold text-gray-900">{branding.shopName}</h1>
           </div>
           <div className="flex items-center gap-4">
