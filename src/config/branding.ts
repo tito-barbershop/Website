@@ -1,3 +1,5 @@
+import logoImg from '../assets/logo.png';
+
 export const branding = {
   shopName: 'Tito Barbershop',
   tagline: 'Premium Barbering Services',
@@ -9,6 +11,6 @@ export const branding = {
     warning: '#f59e0b',
     error: '#ef4444',
   },
-  logo: '/src/assets/logo.png',
+  logo: logoImg,
   dateFormat: 'dd/MM/yyyy hh:mm a',
 };
