@@ -73,14 +73,19 @@ export async function checkAndProcessPaymentCycle(
     await clearEmployeePaymentData(ownerId, employeeId, processedWorkDays);
 
     // Send email to admin - get owner email from users collection
-    const ownerRef = ref(db, `users/${ownerId}`);
-    const ownerSnapshot = await get(ownerRef);
-    const ownerEmail = ownerSnapshot.exists() ? ownerSnapshot.val().email : 'admin@titobarbershop.com';
+    try {
+      const ownerRef = ref(db, `users/${ownerId}`);
+      const ownerSnapshot = await get(ownerRef);
+      const ownerEmail = ownerSnapshot.exists() ? ownerSnapshot.val().email : 'admin@titobarbershop.com';
 
-    await sendPaymentNotificationEmail(
-      ownerEmail,
-      paymentCycle
-    );
+      await sendPaymentNotificationEmail(
+        ownerEmail,
+        paymentCycle
+      );
+    } catch (emailError) {
+      console.error('Error sending payment notification email:', emailError);
+      // Don't throw - payment was already processed, just log email error
+    }
 
     return paymentCycle;
   } catch (error) {
@@ -187,13 +192,12 @@ async function clearEmployeePaymentData(ownerId: string, employeeId: string, pro
       await remove(txnRef);
     }
 
-    // Set new cycle tracking with processed work days and reset counters
+    // Set new cycle tracking with reset counters
     const trackingRef = ref(db, `${PAYMENT_TRACKING_PATH}/${ownerId}/${employeeId}`);
-    const newTracking: PaymentCycleTracking = {
+    const newTracking: any = {
       currentWorkDays: 0,
       currentAbsentDays: 0,
-      cycleStartDate: processedWorkDays[0] || new Date().toISOString().split('T')[0],
-      lastProcessedCycleId: undefined,
+      cycleStartDate: new Date().toISOString().split('T')[0],
       processedTransactionIds: [],
       processedAppointmentIds: [],
       processedWorkDays: [],
@@ -221,7 +225,6 @@ export async function updatePaymentCycleWorkDays(
       currentWorkDays: 0,
       currentAbsentDays: 0,
       cycleStartDate: new Date().toISOString().split('T')[0],
-      lastProcessedCycleId: undefined,
       processedTransactionIds: [],
       processedAppointmentIds: [],
       processedWorkDays: [],
@@ -263,7 +266,6 @@ export async function updatePaymentCycleAbsentDays(
       currentWorkDays: 0,
       currentAbsentDays: 0,
       cycleStartDate: new Date().toISOString().split('T')[0],
-      lastProcessedCycleId: undefined,
       processedTransactionIds: [],
       processedAppointmentIds: [],
       processedWorkDays: [],
