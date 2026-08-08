@@ -52,7 +52,6 @@ export function CustomerAppointmentsPage() {
       setAppointments(customerAppointments);
 
       const workersData = await workerService.getWorkers(storedOwnerId);
-      console.log('Workers loaded:', workersData);
       const workersMap = new Map(
         workersData.map((w) => [
           w.firebaseId,
@@ -72,15 +71,12 @@ export function CustomerAppointmentsPage() {
       });
 
       if (missingWorkerIds.size > 0) {
-        console.log('Loading missing workers:', Array.from(missingWorkerIds));
         for (const workerId of missingWorkerIds) {
           try {
             const workerRef = ref(db, `workers/${storedOwnerId}/${workerId}`);
             const workerSnapshot = await get(workerRef);
-            console.log(`Fetching worker ${workerId}, exists:`, workerSnapshot.exists());
             if (workerSnapshot.exists()) {
               const workerData = workerSnapshot.val();
-              console.log(`Worker ${workerId} data:`, workerData);
               workersMap.set(workerId, {
                 firebaseId: workerId,
                 ...workerData,
@@ -93,7 +89,6 @@ export function CustomerAppointmentsPage() {
         }
       }
 
-      console.log('Workers map created:', workersMap);
       setWorkers(workersMap);
     } catch (error) {
       console.error('Error refreshing appointments:', error);

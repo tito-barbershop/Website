@@ -22,18 +22,14 @@ export function PersonalFinancials({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('PersonalFinancials effect - employeeId:', employeeId, 'ownerId:', ownerId);
     if (employeeId) {
       loadFinancialData();
-    } else {
-      console.log('PersonalFinancials: employeeId is empty, skipping load');
     }
   }, [employeeId, ownerId]);
 
   const loadFinancialData = async () => {
     try {
       setLoading(true);
-      console.log('PersonalFinancials loading with employeeId:', employeeId, 'ownerId:', ownerId);
       const [transactionsData, totalsData, trackingData] = await Promise.all([
         transactionService.getEmployeeTransactions(ownerId, employeeId),
         transactionService.getTransactionTotals(ownerId, employeeId),
@@ -55,7 +51,6 @@ export function PersonalFinancials({
         else if (t.type === 'withdrawal') todayWithdrawals += t.amount;
       }
 
-      console.log('PersonalFinancials loaded transactions:', todayTransactions);
       setTransactions(todayTransactions);
       setTotals({
         totalBonuses: todayBonuses,

@@ -137,9 +137,7 @@ export function OwnerDashboard() {
 
     try {
       // Save worker to database FIRST (while still authenticated as owner)
-      console.log('Creating worker in database:', workerData.email);
       await createWorker(ownerId, workerData, tempPassword);
-      console.log('Worker created in database with temp password');
 
       // Show success message
       showToast(`${workerData.role === 'cashier' ? 'Cashier' : 'Worker'} added successfully!`, 'success');
@@ -287,9 +285,20 @@ export function OwnerDashboard() {
                             {apt.totalPrice.toFixed(2)} LE
                           </p>
                         </div>
-                        <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
-                          pending
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleUpdateAppointmentStatus(apt.firebaseId, 'approved')}
+                            className="px-3 py-1 text-xs rounded bg-green-500 text-white hover:bg-green-600 transition-colors"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleUpdateAppointmentStatus(apt.firebaseId, 'cancelled')}
+                            className="px-3 py-1 text-xs rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -391,7 +400,6 @@ export function OwnerDashboard() {
         <div className="space-y-12">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">My Financials</h2>
-            {console.log('OwnerDashboard - user?.workerId:', user?.workerId, 'user?.id:', user?.id, 'user?.role:', user?.role)}
             <PersonalFinancials
               employeeId={user?.workerId || ''}
               ownerId={ownerId}
