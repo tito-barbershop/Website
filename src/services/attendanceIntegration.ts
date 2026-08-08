@@ -25,7 +25,7 @@ export async function handleAttendanceUpdate(
 
     if (isCompleteWorkDay) {
       // Increment work days in payment cycle tracking
-      await paymentCycleService.updatePaymentCycleWorkDays(ownerId, workerId, 1);
+      await paymentCycleService.updatePaymentCycleWorkDays(ownerId, workerId, selectedDate, 1);
 
       // Check if payment cycle should be triggered
       const paymentCycle = await paymentCycleService.checkAndProcessPaymentCycle(
@@ -63,7 +63,7 @@ export async function handleWorkerAbsence(
 
     // If there's no arrival time, mark as absent
     if (!hasArrival) {
-      await paymentCycleService.updatePaymentCycleAbsentDays(ownerId, workerId, 1);
+      await paymentCycleService.updatePaymentCycleAbsentDays(ownerId, workerId, selectedDate, 1);
     }
   } catch (error) {
     console.error('Error in handleWorkerAbsence:', error);

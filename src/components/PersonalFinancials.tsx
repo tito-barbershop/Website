@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from './ui/Card';
 import { useToast } from '../contexts/ToastContext';
 import * as transactionService from '../services/transactionService';
-import * as paymentCycleService from '../services/paymentCycleService';
 import type { Transaction } from '../types';
-import type { PaymentCycleTracking } from '../services/paymentCycleService';
 
 interface PersonalFinancialsProps {
   employeeId: string;
@@ -18,7 +16,6 @@ export function PersonalFinancials({
   const { showToast } = useToast();
   const [transactions, setTransactions] = useState<(Transaction & { firebaseId: string })[]>([]);
   const [totals, setTotals] = useState({ totalBonuses: 0, totalDeductions: 0, totalWithdrawals: 0 });
-  const [paymentTracking, setPaymentTracking] = useState<PaymentCycleTracking | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,11 +27,7 @@ export function PersonalFinancials({
   const loadFinancialData = async () => {
     try {
       setLoading(true);
-      const [transactionsData, , trackingData] = await Promise.all([
-        transactionService.getEmployeeTransactions(ownerId, employeeId),
-        transactionService.getTransactionTotals(ownerId, employeeId),
-        paymentCycleService.getPaymentCycleTracking(ownerId, employeeId),
-      ]);
+      const transactionsData = await transactionService.getEmployeeTransactions(ownerId, employeeId);
 
       // Filter transactions to show only today's
       const today = new Date().toLocaleDateString('en-CA');
@@ -57,7 +50,6 @@ export function PersonalFinancials({
         totalDeductions: todayDeductions,
         totalWithdrawals: todayWithdrawals,
       });
-      setPaymentTracking(trackingData);
     } catch (error) {
       console.error('Error loading financial data:', error);
       showToast('Error loading financial records', 'error');
@@ -81,32 +73,6 @@ export function PersonalFinancials({
         <p className="text-gray-600 mt-2">Today's bonuses, deductions, and withdrawals</p>
       </div>
 
-      {paymentTracking && (
-        <Card className="p-6 bg-blue-50 border border-blue-200">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-blue-900">30-Work-Day Payment Cycle Progress</h3>
-              <span className="text-2xl font-bold text-blue-600">{paymentTracking.currentWorkDays}/30</span>
-            </div>
-            <div className="w-full bg-blue-200 rounded-full h-3 overflow-hidden">
-              <div
-                className="bg-blue-600 h-full transition-all duration-300 rounded-full"
-                style={{ width: `${(paymentTracking.currentWorkDays / 30) * 100}%` }}
-              />
-            </div>
-            <p className="text-sm text-blue-800">
-              {paymentTracking.currentWorkDays < 30
-                ? `${30 - paymentTracking.currentWorkDays} more work days until payment is automatically processed`
-                : 'Payment cycle will be processed once the current day is completed'}
-            </p>
-            {paymentTracking.currentAbsentDays > 0 && (
-              <p className="text-sm text-orange-800">
-                Absent days this cycle: {paymentTracking.currentAbsentDays}
-              </p>
-            )}
-          </div>
-        </Card>
-      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-6 bg-green-50 border border-green-200">

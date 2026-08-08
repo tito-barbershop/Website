@@ -1,4 +1,4 @@
-import { ref, get, set, update } from 'firebase/database';
+import { ref, get, set, update, remove } from 'firebase/database';
 import { db } from '../config/firebase';
 import * as transactionService from './transactionService';
 import * as appointmentService from './appointmentService';
@@ -28,6 +28,7 @@ export interface PaymentCycleTracking {
   lastProcessedCycleId?: string;
   processedTransactionIds: string[];
   processedAppointmentIds: string[];
+  processedWorkDays?: string[];
 }
 
 const PAYMENT_CYCLES_PATH = 'paymentCycles';
@@ -53,6 +54,9 @@ export async function checkAndProcessPaymentCycle(
       return null;
     }
 
+    // Get processed work days from tracking before processing
+    const processedWorkDays = tracking?.processedWorkDays || [];
+
     // Process payment cycle
     const paymentCycle = await processPaymentCycle(
       ownerId,
@@ -61,11 +65,12 @@ export async function checkAndProcessPaymentCycle(
       employeeEmail,
       role,
       currentWorkDays,
-      tracking?.cycleStartDate
+      tracking?.cycleStartDate,
+      processedWorkDays
     );
 
     // Clear employee data after successful payment
-    await clearEmployeePaymentData(ownerId, employeeId);
+    await clearEmployeePaymentData(ownerId, employeeId, processedWorkDays);
 
     // Send email to admin - get owner email from users collection
     const ownerRef = ref(db, `users/${ownerId}`);
@@ -92,12 +97,21 @@ async function processPaymentCycle(
   employeeEmail: string,
   role: 'worker' | 'cashier',
   workDaysCount: number,
-  cycleStartDate?: string
+  cycleStartDate?: string,
+  processedWorkDays?: string[]
 ): Promise<PaymentCycle> {
   const cycleId = `cycle_${ownerId}_${employeeId}_${Date.now()}`;
-  const now = new Date();
-  const cycleEndDate = now.toISOString().split('T')[0];
-  const startDate = cycleStartDate || '2000-01-01';
+
+  // Use processedWorkDays array for accurate cycle dates if available
+  let startDate = cycleStartDate || '2000-01-01';
+  let cycleEndDate = new Date().toISOString().split('T')[0];
+
+  if (processedWorkDays && processedWorkDays.length > 0) {
+    // Find earliest and latest dates (array may not be sorted)
+    const sortedDates = [...processedWorkDays].sort();
+    startDate = sortedDates[0];
+    cycleEndDate = sortedDates[sortedDates.length - 1];
+  }
 
   // Get transactions for this cycle
   const transactions = await transactionService.getEmployeeTransactions(ownerId, employeeId);
@@ -160,24 +174,29 @@ async function processPaymentCycle(
 }
 
 // Clear employee payment data after processing
-async function clearEmployeePaymentData(ownerId: string, employeeId: string): Promise<void> {
+async function clearEmployeePaymentData(ownerId: string, employeeId: string, processedWorkDays: string[]): Promise<void> {
   try {
-    // Get all transactions and appointments for this cycle to mark them as processed
+    // Delete all attendance records for this employee
+    const attendanceRef = ref(db, `attendance/${ownerId}/${employeeId}`);
+    await remove(attendanceRef);
+
+    // Delete all transactions for this employee
     const transactions = await transactionService.getEmployeeTransactions(ownerId, employeeId);
-    const appointments = await appointmentService.getWorkerAppointments(ownerId, employeeId);
+    for (const transaction of transactions) {
+      const txnRef = ref(db, `transactions/${ownerId}/${(transaction as any).firebaseId}`);
+      await remove(txnRef);
+    }
 
-    // Collect IDs of transactions and appointments to process
-    const transactionIds = transactions.map(t => (t as any).firebaseId);
-    const appointmentIds = appointments.map(a => a.firebaseId);
-
-    // Clear tracking data and reset cycle
+    // Set new cycle tracking with processed work days and reset counters
     const trackingRef = ref(db, `${PAYMENT_TRACKING_PATH}/${ownerId}/${employeeId}`);
     const newTracking: PaymentCycleTracking = {
       currentWorkDays: 0,
       currentAbsentDays: 0,
-      cycleStartDate: new Date().toISOString().split('T')[0],
-      processedTransactionIds: transactionIds,
-      processedAppointmentIds: appointmentIds,
+      cycleStartDate: processedWorkDays[0] || new Date().toISOString().split('T')[0],
+      lastProcessedCycleId: undefined,
+      processedTransactionIds: [],
+      processedAppointmentIds: [],
+      processedWorkDays: [],
     };
 
     await set(trackingRef, newTracking);
@@ -191,6 +210,7 @@ async function clearEmployeePaymentData(ownerId: string, employeeId: string): Pr
 export async function updatePaymentCycleWorkDays(
   ownerId: string,
   employeeId: string,
+  selectedDate?: string,
   incrementBy: number = 1
 ): Promise<void> {
   try {
@@ -201,14 +221,26 @@ export async function updatePaymentCycleWorkDays(
       currentWorkDays: 0,
       currentAbsentDays: 0,
       cycleStartDate: new Date().toISOString().split('T')[0],
+      lastProcessedCycleId: undefined,
       processedTransactionIds: [],
       processedAppointmentIds: [],
+      processedWorkDays: [],
     };
 
+    const processedWorkDays = tracking.processedWorkDays || [];
+    const dateToCheck = selectedDate || new Date().toISOString().split('T')[0];
+
+    // Prevent duplicate counting of same day
+    if (processedWorkDays.includes(dateToCheck)) {
+      return;
+    }
+
     const newWorkDays = (tracking.currentWorkDays || 0) + incrementBy;
+    processedWorkDays.push(dateToCheck);
 
     await update(trackingRef, {
       currentWorkDays: newWorkDays,
+      processedWorkDays,
     });
   } catch (error) {
     console.error('Error updating payment cycle work days:', error);
@@ -220,6 +252,7 @@ export async function updatePaymentCycleWorkDays(
 export async function updatePaymentCycleAbsentDays(
   ownerId: string,
   employeeId: string,
+  selectedDate?: string,
   incrementBy: number = 1
 ): Promise<void> {
   try {
@@ -230,18 +263,78 @@ export async function updatePaymentCycleAbsentDays(
       currentWorkDays: 0,
       currentAbsentDays: 0,
       cycleStartDate: new Date().toISOString().split('T')[0],
+      lastProcessedCycleId: undefined,
       processedTransactionIds: [],
       processedAppointmentIds: [],
+      processedWorkDays: [],
     };
 
+    const processedWorkDays = tracking.processedWorkDays || [];
+    const dateToCheck = selectedDate || new Date().toISOString().split('T')[0];
+
+    // Prevent duplicate counting of same day
+    if (processedWorkDays.includes(dateToCheck)) {
+      return;
+    }
+
     const newAbsentDays = (tracking.currentAbsentDays || 0) + incrementBy;
+    processedWorkDays.push(dateToCheck);
 
     await update(trackingRef, {
       currentAbsentDays: newAbsentDays,
+      processedWorkDays,
     });
   } catch (error) {
     console.error('Error updating payment cycle absent days:', error);
     throw error;
+  }
+}
+
+// Recalculate work days based on actual attendance records
+export async function recalculateWorkDays(
+  ownerId: string,
+  employeeId: string
+): Promise<number> {
+  try {
+    const trackingRef = ref(db, `${PAYMENT_TRACKING_PATH}/${ownerId}/${employeeId}`);
+    const trackingSnapshot = await get(trackingRef);
+
+    if (!trackingSnapshot.exists()) {
+      return 0;
+    }
+
+    const tracking = trackingSnapshot.val() as PaymentCycleTracking;
+    const cycleStartDate = tracking.cycleStartDate;
+    const processedWorkDays = tracking.processedWorkDays || [];
+
+    // Get all attendance records for this employee since cycle start
+    const attendanceRef = ref(db, `attendance/${ownerId}/${employeeId}`);
+    const attendanceSnapshot = await get(attendanceRef);
+
+    if (!attendanceSnapshot.exists()) {
+      return 0;
+    }
+
+    const attendanceData = attendanceSnapshot.val();
+    let workDayCount = 0;
+
+    // Count complete work days (has both arrival and departure) since cycle start
+    for (const [date, record] of Object.entries(attendanceData)) {
+      if (date >= cycleStartDate) {
+        const attendance = record as any;
+        const hasArrival = attendance.arrivalTime !== null && attendance.arrivalTime !== undefined;
+        const hasDeparture = attendance.departureTime !== null && attendance.departureTime !== undefined;
+
+        if (hasArrival && hasDeparture && !processedWorkDays.includes(date)) {
+          workDayCount++;
+        }
+      }
+    }
+
+    return workDayCount;
+  } catch (error) {
+    console.error('Error recalculating work days:', error);
+    return 0;
   }
 }
 
@@ -258,7 +351,18 @@ export async function getPaymentCycleTracking(
       return null;
     }
 
-    return trackingSnapshot.val() as PaymentCycleTracking;
+    const tracking = trackingSnapshot.val() as PaymentCycleTracking;
+
+    // Recalculate work days to ensure sync with actual attendance
+    const actualWorkDays = await recalculateWorkDays(ownerId, employeeId);
+
+    // Update tracking if out of sync (more than 1 day difference)
+    if (Math.abs((tracking.currentWorkDays || 0) - actualWorkDays) > 1) {
+      await update(trackingRef, { currentWorkDays: actualWorkDays });
+      tracking.currentWorkDays = actualWorkDays;
+    }
+
+    return tracking;
   } catch (error) {
     console.error('Error getting payment cycle tracking:', error);
     return null;
