@@ -37,7 +37,7 @@ export function PersonalFinancials({
       ]);
 
       // Filter transactions to show only today's
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA');
       const todayTransactions = transactionsData.filter(t => t.date === today);
 
       // Calculate totals for today only
