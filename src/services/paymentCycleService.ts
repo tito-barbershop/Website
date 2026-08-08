@@ -399,7 +399,7 @@ async function sendPaymentNotificationEmail(
 
     await brevoService.sendEmail({
       to: [{ email: adminEmail, name: 'Admin' }],
-      subject: `Payment Processed - ${paymentCycle.employeeName}`,
+      subject: `Time to Pay - ${paymentCycle.employeeName}`,
       htmlContent,
     });
   } catch (error) {
@@ -412,8 +412,8 @@ async function sendPaymentNotificationEmail(
 function generatePaymentNotificationEmail(paymentCycle: PaymentCycle): string {
   const appointmentsRow = paymentCycle.role === 'worker'
     ? `<tr>
-         <td style="padding: 12px; text-align: left;">Appointments Revenue</td>
-         <td style="padding: 12px; text-align: right;">${paymentCycle.appointmentsRevenue.toFixed(2)} LE</td>
+         <td class="label" style="padding: 12px; text-align: left;">Appointments Revenue</td>
+         <td class="amount" style="padding: 12px; text-align: right;">${paymentCycle.appointmentsRevenue.toFixed(2)} LE</td>
        </tr>`
     : '';
 
@@ -441,15 +441,15 @@ function generatePaymentNotificationEmail(paymentCycle: PaymentCycle): string {
         <div class="container">
           <div class="header">
             <h1>Payment Cycle Completed</h1>
+            <p>A 30-work-day payment cycle has been completed and processed.</p>
           </div>
           <div class="content">
-            <p>A 30-work-day payment cycle has been completed and processed.</p>
 
             <div class="details">
-              <p><strong>Employee Name:</strong> ${paymentCycle.employeeName}</p>
+              <p><strong>Name:</strong> ${paymentCycle.employeeName}</p>
               <p><strong>Role:</strong> ${paymentCycle.role === 'worker' ? 'Worker' : 'Cashier'}</p>
               <p><strong>Work Days Completed:</strong> ${paymentCycle.workDaysCount}</p>
-              <p><strong>Cycle Period:</strong> ${paymentCycle.cycleStartDate} to ${paymentCycle.cycleEndDate}</p>
+              <p><strong>Cycle Period:</strong> from ${paymentCycle.cycleStartDate} to ${paymentCycle.cycleEndDate}</p>
             </div>
 
             <h3 style="margin-top: 25px; color: #1f2937;">Payment Summary</h3>

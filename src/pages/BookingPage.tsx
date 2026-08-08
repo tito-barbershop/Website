@@ -286,7 +286,7 @@ export function BookingPage() {
 
           await sendEmail({
             to: [{ email: user.email, name: customer?.name }],
-            subject: 'Appointment Confirmation - BarberHub',
+            subject: 'Appointment Confirmation - Tito Barbershop',
             htmlContent: customerHtmlContent
           });
 
@@ -303,7 +303,7 @@ export function BookingPage() {
 
           await sendEmail({
             to: [{ email: currentWorker?.email || '', name: currentWorker?.name }],
-            subject: 'New Appointment Request - BarberHub',
+            subject: 'New Appointment Request - Tito Barbershop',
             htmlContent: workerHtmlContent
           });
         } catch (emailError) {

@@ -23,7 +23,7 @@ export async function sendEmail(data: EmailData): Promise<void> {
       to: data.to,
       subject: data.subject,
       htmlContent: data.htmlContent,
-      sender: data.from || { email: 'omarfathyyzz8@gmail.com', name: 'Tito Barbershop' }
+      sender: data.from || { email: 'tito.salon.barbershop@gmail.com', name: 'Tito Barbershop' }
     };
 
     const response = await fetch(BREVO_API_URL, {
@@ -131,7 +131,7 @@ export function generateWorkerNotificationEmail(
               <p><strong>Price:</strong> ${price.toFixed(2)} LE</p>
             </div>
             <p>Please review and approve this appointment in your dashboard.</p>
-            <a href="https://barberhub.com/worker/dashboard" class="action-btn">Review Appointment</a>
+            <a href="https://tito-salon.vercel.app/worker" class="action-btn">Review Appointment</a>
           </div>
           <div class="footer">
             <p>&copy; 2026 Tito Barbershop. All rights reserved.</p>
