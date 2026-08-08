@@ -70,7 +70,7 @@ export async function checkAndProcessPaymentCycle(
     );
 
     // Clear employee data after successful payment
-    await clearEmployeePaymentData(ownerId, employeeId, processedWorkDays);
+    await clearEmployeePaymentData(ownerId, employeeId);
 
     // Send email to admin - get owner email from users collection
     try {
@@ -179,7 +179,7 @@ async function processPaymentCycle(
 }
 
 // Clear employee payment data after processing
-async function clearEmployeePaymentData(ownerId: string, employeeId: string, processedWorkDays: string[]): Promise<void> {
+async function clearEmployeePaymentData(ownerId: string, employeeId: string): Promise<void> {
   try {
     // Delete all attendance records for this employee
     const attendanceRef = ref(db, `attendance/${ownerId}/${employeeId}`);
