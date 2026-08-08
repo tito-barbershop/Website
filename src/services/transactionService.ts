@@ -126,3 +126,33 @@ export async function getTransactionTotals(
     totalWithdrawals,
   };
 }
+
+export async function getAllTransactionTotals(
+  ownerId: string
+): Promise<{
+  totalBonuses: number;
+  totalDeductions: number;
+  totalWithdrawals: number;
+}> {
+  const transactions = await getAllTransactionsForOwner(ownerId);
+
+  let totalBonuses = 0;
+  let totalDeductions = 0;
+  let totalWithdrawals = 0;
+
+  for (const t of transactions) {
+    if (t.type === 'bonus') {
+      totalBonuses += t.amount;
+    } else if (t.type === 'deduction') {
+      totalDeductions += t.amount;
+    } else if (t.type === 'withdrawal') {
+      totalWithdrawals += t.amount;
+    }
+  }
+
+  return {
+    totalBonuses,
+    totalDeductions,
+    totalWithdrawals,
+  };
+}

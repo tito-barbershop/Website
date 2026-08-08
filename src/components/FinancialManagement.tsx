@@ -27,7 +27,9 @@ export function FinancialManagement({
   const [selectedEmployee, setSelectedEmployee] = useState<(Worker & { firebaseId: string }) | null>(null);
   const [transactions, setTransactions] = useState<(Transaction & { firebaseId: string })[]>([]);
   const [totals, setTotals] = useState({ totalBonuses: 0, totalDeductions: 0, totalWithdrawals: 0 });
+  const [allTotals, setAllTotals] = useState({ totalBonuses: 0, totalDeductions: 0, totalWithdrawals: 0 });
   const [loading, setLoading] = useState(false);
+  const [loadingOverall, setLoadingOverall] = useState(false);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -46,6 +48,10 @@ export function FinancialManagement({
   );
 
   useEffect(() => {
+    loadOverallTotals();
+  }, []);
+
+  useEffect(() => {
     if (selectedEmployeeId) {
       const employee = availableEmployees.find((w) => w.firebaseId === selectedEmployeeId);
       setSelectedEmployee(employee || null);
@@ -54,6 +60,18 @@ export function FinancialManagement({
       }
     }
   }, [selectedEmployeeId, availableEmployees]);
+
+  const loadOverallTotals = async () => {
+    try {
+      setLoadingOverall(true);
+      const totalsData = await transactionService.getAllTransactionTotals(ownerId);
+      setAllTotals(totalsData);
+    } catch (error) {
+      console.error('Error loading overall totals:', error);
+    } finally {
+      setLoadingOverall(false);
+    }
+  };
 
   const loadTransactions = async (employeeId: string) => {
     try {
@@ -119,6 +137,7 @@ export function FinancialManagement({
 
       if (selectedEmployeeId) {
         await loadTransactions(selectedEmployeeId);
+        await loadOverallTotals();
       }
     } catch (error) {
       console.error('Error adding transaction:', error);
@@ -138,6 +157,7 @@ export function FinancialManagement({
       showToast('Transaction deleted successfully', 'success');
       if (selectedEmployeeId) {
         await loadTransactions(selectedEmployeeId);
+        await loadOverallTotals();
       }
     } catch (error) {
       console.error('Error deleting transaction:', error);
@@ -151,6 +171,23 @@ export function FinancialManagement({
         <h1 className="text-3xl font-bold text-gray-900">Financial Management</h1>
         <p className="text-gray-600 mt-2">Manage bonuses, deductions, and withdrawals</p>
       </div>
+
+      {!isCashier && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="p-4 bg-green-50 border border-green-200">
+            <p className="text-sm text-gray-600">Total Bonuses (All)</p>
+            <p className="text-2xl font-bold text-green-600">{allTotals.totalBonuses.toFixed(2)} LE</p>
+          </Card>
+          <Card className="p-4 bg-red-50 border border-red-200">
+            <p className="text-sm text-gray-600">Total Deductions (All)</p>
+            <p className="text-2xl font-bold text-red-600">{allTotals.totalDeductions.toFixed(2)} LE</p>
+          </Card>
+          <Card className="p-4 bg-blue-50 border border-blue-200">
+            <p className="text-sm text-gray-600">Total Withdrawals (All)</p>
+            <p className="text-2xl font-bold text-blue-600">{allTotals.totalWithdrawals.toFixed(2)} LE</p>
+          </Card>
+        </div>
+      )}
 
       <Card className="p-6">
         <div className="flex items-center gap-4 mb-6 flex-wrap">
