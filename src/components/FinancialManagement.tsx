@@ -29,7 +29,6 @@ export function FinancialManagement({
   const [totals, setTotals] = useState({ totalBonuses: 0, totalDeductions: 0, totalWithdrawals: 0 });
   const [allTotals, setAllTotals] = useState({ totalBonuses: 0, totalDeductions: 0, totalWithdrawals: 0 });
   const [loading, setLoading] = useState(false);
-  const [loadingOverall, setLoadingOverall] = useState(false);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -63,13 +62,10 @@ export function FinancialManagement({
 
   const loadOverallTotals = async () => {
     try {
-      setLoadingOverall(true);
-      const totalsData = await transactionService.getAllTransactionTotals(ownerId);
-      setAllTotals(totalsData);
+      const data = await transactionService.getAllTransactionTotals(ownerId);
+      setAllTotals(data);
     } catch (error) {
       console.error('Error loading overall totals:', error);
-    } finally {
-      setLoadingOverall(false);
     }
   };
 

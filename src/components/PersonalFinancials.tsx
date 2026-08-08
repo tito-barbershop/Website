@@ -30,7 +30,7 @@ export function PersonalFinancials({
   const loadFinancialData = async () => {
     try {
       setLoading(true);
-      const [transactionsData, totalsData, trackingData] = await Promise.all([
+      const [transactionsData, , trackingData] = await Promise.all([
         transactionService.getEmployeeTransactions(ownerId, employeeId),
         transactionService.getTransactionTotals(ownerId, employeeId),
         paymentCycleService.getPaymentCycleTracking(ownerId, employeeId),
