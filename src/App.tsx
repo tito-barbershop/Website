@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
 import { ToastProvider } from './contexts/ToastContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
@@ -7,16 +6,9 @@ import { RegisterPage } from './pages/RegisterPage';
 import { CustomerHomePage } from './pages/CustomerHomePage';
 import { CustomerAppointmentsPage } from './pages/CustomerAppointmentsPage';
 import { BookingPage } from './pages/BookingPage';
+import { OwnerDashboard } from './pages/OwnerDashboard';
+import { WorkerDashboard } from './pages/WorkerDashboard';
 import { HomePage } from './pages/HomePage';
-
-const OwnerDashboard = lazy(() => import('./pages/OwnerDashboard'));
-const WorkerDashboard = lazy(() => import('./pages/WorkerDashboard'));
-
-const LoadingSpinner = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <p className="text-gray-600">Loading...</p>
-  </div>
-);
 
 function App() {
   return (
@@ -66,9 +58,7 @@ function App() {
             path="/admin/*"
             element={
               <ProtectedRoute allowedRoles={['owner']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <OwnerDashboard />
-                </Suspense>
+                <OwnerDashboard />
               </ProtectedRoute>
             }
           />
@@ -77,9 +67,7 @@ function App() {
             path="/cashier/*"
             element={
               <ProtectedRoute allowedRoles={['cashier']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <OwnerDashboard />
-                </Suspense>
+                <OwnerDashboard />
               </ProtectedRoute>
             }
           />
@@ -88,9 +76,7 @@ function App() {
             path="/worker/*"
             element={
               <ProtectedRoute allowedRoles={['worker']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <WorkerDashboard />
-                </Suspense>
+                <WorkerDashboard />
               </ProtectedRoute>
             }
           />
