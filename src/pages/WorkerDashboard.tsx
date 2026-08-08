@@ -19,7 +19,7 @@ import * as workerService from '../services/workerService';
 import * as attendanceService from '../services/attendanceService';
 import type { Appointment, Service, Worker, WorkingHours, Attendance, SimpleRating } from '../types';
 
-export function WorkerDashboard() {
+function WorkerDashboard() {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -388,3 +388,5 @@ export function WorkerDashboard() {
     </WorkerLayout>
   );
 }
+
+export default WorkerDashboard;

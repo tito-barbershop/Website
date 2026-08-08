@@ -39,7 +39,7 @@ import {
 import { getCustomers } from '../services/customerService';
 import type { Appointment, Service, Worker, AppointmentStatus } from '../types';
 
-export function OwnerDashboard() {
+function OwnerDashboard() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
@@ -454,3 +454,5 @@ export function OwnerDashboard() {
     </DashboardLayout>
   );
 }
+
+export default OwnerDashboard;
