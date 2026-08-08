@@ -19,7 +19,11 @@
         ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'owner'",
         "$workerId": {
           ".read": "auth != null",
-          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('role').val() === 'cashier' && root.child('users').child(auth.uid).child('ownerId').val() === $ownerId && root.child('workers').child($ownerId).child($workerId).child('role').val() === 'worker') || root.child('workers').child($ownerId).child($workerId).child('id').val() === auth.uid)"
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('role').val() === 'cashier' && root.child('users').child(auth.uid).child('ownerId').val() === $ownerId && root.child('workers').child($ownerId).child($workerId).child('role').val() === 'worker') || root.child('workers').child($ownerId).child($workerId).child('id').val() === auth.uid)",
+          "ratings": {
+            ".read": "auth != null",
+            ".write": "auth != null"
+          }
         }
       }
     },
@@ -71,11 +75,11 @@
     },
     "transactions": {
       "$ownerId": {
-        ".read": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('role').val() === 'cashier' && root.child('users').child(auth.uid).child('ownerId').val() === $ownerId) || (root.child('users').child(auth.uid).child('role').val() === 'worker' && root.child('users').child(auth.uid).child('ownerId').val() === $ownerId)",
-        ".write": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('role').val() === 'cashier' && root.child('users').child(auth.uid).child('ownerId').val() === $ownerId)",
+        ".read": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('ownerId').val() === $ownerId && (root.child('users').child(auth.uid).child('role').val() === 'cashier' || root.child('users').child(auth.uid).child('role').val() === 'worker'))",
+        ".write": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('ownerId').val() === $ownerId && (root.child('users').child(auth.uid).child('role').val() === 'cashier'))",
         "$transactionId": {
-          ".read": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('role').val() === 'cashier' && root.child('users').child(auth.uid).child('ownerId').val() === $ownerId) || root.child('transactions').child($ownerId).child($transactionId).child('employeeId').val() === auth.uid",
-          ".write": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('role').val() === 'cashier' && root.child('users').child(auth.uid).child('ownerId').val() === $ownerId && (newData.child('employeeId').val() !== auth.uid || !newData.exists()))"
+          ".read": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('ownerId').val() === $ownerId && (root.child('users').child(auth.uid).child('role').val() === 'cashier' || root.child('users').child(auth.uid).child('role').val() === 'worker'))",
+          ".write": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('ownerId').val() === $ownerId && root.child('users').child(auth.uid).child('role').val() === 'cashier')"
         }
       }
     },
@@ -86,6 +90,26 @@
         "$expenseId": {
           ".read": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('role').val() === 'cashier' && root.child('users').child(auth.uid).child('ownerId').val() === $ownerId)",
           ".write": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('role').val() === 'cashier' && root.child('users').child(auth.uid).child('ownerId').val() === $ownerId)"
+        }
+      }
+    },
+    "paymentCycles": {
+      "$ownerId": {
+        ".read": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('role').val() === 'cashier' && root.child('users').child(auth.uid).child('ownerId').val() === $ownerId)",
+        ".write": "auth != null",
+        "$cycleId": {
+          ".read": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('role').val() === 'cashier' && root.child('users').child(auth.uid).child('ownerId').val() === $ownerId)",
+          ".write": "auth != null"
+        }
+      }
+    },
+    "paymentCycleTracking": {
+      "$ownerId": {
+        ".read": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('role').val() === 'cashier' && root.child('users').child(auth.uid).child('ownerId').val() === $ownerId) || root.child('users').child(auth.uid).child('role').val() === 'worker'",
+        ".write": "auth != null",
+        "$employeeId": {
+          ".read": "root.child('users').child(auth.uid).child('role').val() === 'owner' || (root.child('users').child(auth.uid).child('role').val() === 'cashier' && root.child('users').child(auth.uid).child('ownerId').val() === $ownerId) || root.child('users').child(auth.uid).child('role').val() === 'worker'",
+          ".write": "auth != null"
         }
       }
     }

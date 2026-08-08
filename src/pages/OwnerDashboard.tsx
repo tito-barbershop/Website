@@ -14,6 +14,7 @@ import { FinancialManagement } from '../components/FinancialManagement';
 import { PersonalFinancials } from '../components/PersonalFinancials';
 import { ExpenseManagement } from '../components/ExpenseManagement';
 import { ChangePasswordDialog } from '../components/ChangePasswordDialog';
+import { PaymentCyclesHistory } from '../components/PaymentCyclesHistory';
 import { Card } from '../components/ui/Card';
 import { formatDateTime } from '../lib/utils';
 import {
@@ -44,6 +45,7 @@ export function OwnerDashboard() {
 
   const isOwner = user?.role === 'owner';
   const isCashier = user?.role === 'cashier';
+  const isWorker = user?.role === 'worker';
 
   const [currentTab, setCurrentTab] = useState('overview');
   const [workers, setWorkers] = useState<(Worker & { firebaseId: string })[]>([]);
@@ -385,12 +387,13 @@ export function OwnerDashboard() {
         <AdminAttendance workers={workers} ownerId={ownerId} />
       )}
 
-      {currentTab === 'financials' && isCashier && (
+      {currentTab === 'financials' && (isCashier || isWorker) && (
         <div className="space-y-12">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">My Financials</h2>
+            {console.log('OwnerDashboard - user?.workerId:', user?.workerId, 'user?.id:', user?.id, 'user?.role:', user?.role)}
             <PersonalFinancials
-              employeeId={user?.id || ''}
+              employeeId={user?.workerId || ''}
               ownerId={ownerId}
             />
           </div>
@@ -430,6 +433,10 @@ export function OwnerDashboard() {
             <AllRatingsView workers={workers} ownerId={ownerId} />
           </Card>
         </div>
+      )}
+
+      {currentTab === 'payment-cycles' && isOwner && (
+        <PaymentCyclesHistory ownerId={ownerId} />
       )}
 
       <ChangePasswordDialog

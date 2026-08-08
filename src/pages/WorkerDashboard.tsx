@@ -348,9 +348,9 @@ export function WorkerDashboard() {
           </div>
         )}
 
-        {currentTab === 'financials' && ownerId && currentUser?.uid && (
+        {currentTab === 'financials' && ownerId && workerId && (
           <PersonalFinancials
-            employeeId={currentUser.uid}
+            employeeId={workerId}
             ownerId={ownerId}
           />
         )}

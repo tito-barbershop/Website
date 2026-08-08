@@ -49,8 +49,8 @@ export function FinancialManagement({
     if (selectedEmployeeId) {
       const employee = availableEmployees.find((w) => w.firebaseId === selectedEmployeeId);
       setSelectedEmployee(employee || null);
-      if (employee?.id) {
-        loadTransactions(employee.id);
+      if (selectedEmployeeId) {
+        loadTransactions(selectedEmployeeId);
       }
     }
   }, [selectedEmployeeId, availableEmployees]);
@@ -96,7 +96,7 @@ export function FinancialManagement({
     try {
       setTransactionLoading(true);
       const userId = user?.id || '';
-      const employeeId = selectedEmployee?.id || selectedEmployeeId;
+      const employeeId = selectedEmployeeId;
 
       await transactionService.createTransaction(
         ownerId,
@@ -117,8 +117,8 @@ export function FinancialManagement({
       });
       setIsAddDialogOpen(false);
 
-      if (selectedEmployee?.id) {
-        await loadTransactions(selectedEmployee.id);
+      if (selectedEmployeeId) {
+        await loadTransactions(selectedEmployeeId);
       }
     } catch (error) {
       console.error('Error adding transaction:', error);
@@ -136,8 +136,8 @@ export function FinancialManagement({
     try {
       await transactionService.deleteTransaction(ownerId, transactionId);
       showToast('Transaction deleted successfully', 'success');
-      if (selectedEmployee?.id) {
-        await loadTransactions(selectedEmployee.id);
+      if (selectedEmployeeId) {
+        await loadTransactions(selectedEmployeeId);
       }
     } catch (error) {
       console.error('Error deleting transaction:', error);

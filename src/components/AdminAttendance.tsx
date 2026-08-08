@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Card } from './ui/Card';
 import { Checkbox } from './ui/Checkbox';
 import { Input } from './ui/Input';
+import { useToast } from '../contexts/ToastContext';
 import { formatDuration, calculateWorkedHours, getAttendanceStatus, formatDate } from '../lib/utils';
 import * as attendanceService from '../services/attendanceService';
+import * as attendanceIntegration from '../services/attendanceIntegration';
 import { useAuth } from '../hooks/useAuth';
 import type { Worker, Attendance } from '../types';
 
@@ -14,22 +16,14 @@ interface AdminAttendanceProps {
 
 export function AdminAttendance({ workers, ownerId }: AdminAttendanceProps) {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
   const [attendanceMap, setAttendanceMap] = useState<Map<string, Attendance & { firebaseId: string }>>(
     new Map()
   );
   const [loading, setLoading] = useState(false);
-  const [currentTime, setCurrentTime] = useState(Date.now());
 
   const isCashier = user?.role === 'cashier';
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(Date.now());
-    }, 30 * 60 * 1000); // 30 minutes
-
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     loadAttendanceData();
@@ -81,9 +75,16 @@ export function AdminAttendance({ workers, ownerId }: AdminAttendanceProps) {
           newMap.set(workerId, updated);
           return newMap;
         });
+
+        // Trigger payment cycle check if work day is complete
+        const worker = workers.find(w => w.firebaseId === workerId);
+        if (worker) {
+          await attendanceIntegration.handleAttendanceUpdate(ownerId, workerId, selectedDate, worker);
+        }
       }
     } catch (error) {
       console.error('Error updating arrival:', error);
+      showToast('Error updating attendance', 'error');
     }
   };
 
@@ -105,9 +106,19 @@ export function AdminAttendance({ workers, ownerId }: AdminAttendanceProps) {
           newMap.set(workerId, updated);
           return newMap;
         });
+
+        // Trigger payment cycle check if work day is complete
+        const worker = workers.find(w => w.firebaseId === workerId);
+        if (worker) {
+          const paymentResult = await attendanceIntegration.handleAttendanceUpdate(ownerId, workerId, selectedDate, worker);
+          if (paymentResult) {
+            showToast('Payment cycle completed and processed!', 'success');
+          }
+        }
       }
     } catch (error) {
       console.error('Error updating departure:', error);
+      showToast('Error updating attendance', 'error');
     }
   };
 
@@ -179,7 +190,7 @@ export function AdminAttendance({ workers, ownerId }: AdminAttendanceProps) {
                   const { duration, isActive } = calculateWorkedHours(
                     attendance.arrivalTime,
                     attendance.departureTime,
-                    currentTime
+                    Date.now()
                   );
                   const hasArrived = attendance.arrivalTime !== null;
                   const hasDeparted = attendance.departureTime !== null;

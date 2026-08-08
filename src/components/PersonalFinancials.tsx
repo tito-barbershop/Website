@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Card } from './ui/Card';
 import { useToast } from '../contexts/ToastContext';
 import * as transactionService from '../services/transactionService';
+import * as paymentCycleService from '../services/paymentCycleService';
 import type { Transaction } from '../types';
+import type { PaymentCycleTracking } from '../services/paymentCycleService';
 
 interface PersonalFinancialsProps {
   employeeId: string;
@@ -16,21 +18,51 @@ export function PersonalFinancials({
   const { showToast } = useToast();
   const [transactions, setTransactions] = useState<(Transaction & { firebaseId: string })[]>([]);
   const [totals, setTotals] = useState({ totalBonuses: 0, totalDeductions: 0, totalWithdrawals: 0 });
+  const [paymentTracking, setPaymentTracking] = useState<PaymentCycleTracking | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadFinancialData();
+    console.log('PersonalFinancials effect - employeeId:', employeeId, 'ownerId:', ownerId);
+    if (employeeId) {
+      loadFinancialData();
+    } else {
+      console.log('PersonalFinancials: employeeId is empty, skipping load');
+    }
   }, [employeeId, ownerId]);
 
   const loadFinancialData = async () => {
     try {
       setLoading(true);
-      const [transactionsData, totalsData] = await Promise.all([
+      console.log('PersonalFinancials loading with employeeId:', employeeId, 'ownerId:', ownerId);
+      const [transactionsData, totalsData, trackingData] = await Promise.all([
         transactionService.getEmployeeTransactions(ownerId, employeeId),
         transactionService.getTransactionTotals(ownerId, employeeId),
+        paymentCycleService.getPaymentCycleTracking(ownerId, employeeId),
       ]);
-      setTransactions(transactionsData);
-      setTotals(totalsData);
+
+      // Filter transactions to show only today's
+      const today = new Date().toISOString().split('T')[0];
+      const todayTransactions = transactionsData.filter(t => t.date === today);
+
+      // Calculate totals for today only
+      let todayBonuses = 0;
+      let todayDeductions = 0;
+      let todayWithdrawals = 0;
+
+      for (const t of todayTransactions) {
+        if (t.type === 'bonus') todayBonuses += t.amount;
+        else if (t.type === 'deduction') todayDeductions += t.amount;
+        else if (t.type === 'withdrawal') todayWithdrawals += t.amount;
+      }
+
+      console.log('PersonalFinancials loaded transactions:', todayTransactions);
+      setTransactions(todayTransactions);
+      setTotals({
+        totalBonuses: todayBonuses,
+        totalDeductions: todayDeductions,
+        totalWithdrawals: todayWithdrawals,
+      });
+      setPaymentTracking(trackingData);
     } catch (error) {
       console.error('Error loading financial data:', error);
       showToast('Error loading financial records', 'error');
@@ -50,9 +82,36 @@ export function PersonalFinancials({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Financial Summary</h1>
-        <p className="text-gray-600 mt-2">Your bonuses, deductions, and withdrawals</p>
+        <h1 className="text-3xl font-bold text-gray-900">Today's Financial Summary</h1>
+        <p className="text-gray-600 mt-2">Today's bonuses, deductions, and withdrawals</p>
       </div>
+
+      {paymentTracking && (
+        <Card className="p-6 bg-blue-50 border border-blue-200">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-blue-900">30-Work-Day Payment Cycle Progress</h3>
+              <span className="text-2xl font-bold text-blue-600">{paymentTracking.currentWorkDays}/30</span>
+            </div>
+            <div className="w-full bg-blue-200 rounded-full h-3 overflow-hidden">
+              <div
+                className="bg-blue-600 h-full transition-all duration-300 rounded-full"
+                style={{ width: `${(paymentTracking.currentWorkDays / 30) * 100}%` }}
+              />
+            </div>
+            <p className="text-sm text-blue-800">
+              {paymentTracking.currentWorkDays < 30
+                ? `${30 - paymentTracking.currentWorkDays} more work days until payment is automatically processed`
+                : 'Payment cycle will be processed once the current day is completed'}
+            </p>
+            {paymentTracking.currentAbsentDays > 0 && (
+              <p className="text-sm text-orange-800">
+                Absent days this cycle: {paymentTracking.currentAbsentDays}
+              </p>
+            )}
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-6 bg-green-50 border border-green-200">
@@ -70,11 +129,11 @@ export function PersonalFinancials({
       </div>
 
       <Card className="p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-6">Transaction History</h2>
+        <h2 className="text-lg font-bold text-gray-900 mb-6">Today's Transactions</h2>
 
         {transactions.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <p className="text-gray-600">No financial records yet.</p>
+            <p className="text-gray-600">No transactions today.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
