@@ -91,6 +91,7 @@ export function CustomerHomePage() {
 
   const filteredWorkers = workers.filter(
     (worker) =>
+      worker.role === 'worker' &&
       worker.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
